@@ -8,6 +8,11 @@ LOGFILE=$2.ddrescue.log
 SESSION=2
 SECTOR_SIZE=2048
 
+if [ "$#" -ne 2 ]; then
+  echo "Usage: ripenhanced {DEVICE} {ISOFILE}"
+  exit
+fi
+
 # Read the disc TOC to find the starting sector
 rawtoc=`cdrdao read-toc --device "$DEVICE" --session $SESSION --fast-toc "$TOCFILE" 2>&1 | grep " DATA " | grep -v "Leadout"`
 
