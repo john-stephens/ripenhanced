@@ -1,0 +1,37 @@
+#!/bin/bash
+
+DEVICE=$1
+OUTPUT=$2
+
+TOCFILE=/tmp/$$.toc
+LOGFILE=$2.ddrescue.log
+SESSION=2
+SECTOR_SIZE=2048
+
+# Read the disc TOC to find the starting sector
+rawtoc=`cdrdao read-toc --device "$DEVICE" --session $SESSION --fast-toc "$TOCFILE" 2>&1 | grep " DATA " | grep -v "Leadout"`
+
+rm "$TOCFILE"
+
+if [ -z "$rawtoc" ]; then
+  echo "Data track not found. Exiting."
+  exit
+fi
+
+# Extract the starting sector and convert to bytes
+
+#12 DATA 4 44:57:37(202312) 10:26:31( 46981)
+start=`echo "$rawtoc" | sed -E "s/^[^\(]+\(([0-9]+)\).*/\1*$SECTOR_SIZE/" | bc`
+
+# Extract the data
+ddrescue -r 1 -b $SECTOR_SIZE -i $start -o 0 "$DEVICE" "$OUTPUT" "$LOGFILE"
+
+# Remove the log if there are no errors
+numerrs=`cat "$LOGFILE" | grep -Ei "^(0x[0-9A-F]+\s+){2}-$" | wc -l`
+
+if [ "$numerrs" == "0" ]; then
+  echo "No errors found, removing log."
+  rm "$LOGFILE"
+else
+  echo "$numerrs error(s) found, keeping log."
+fi
