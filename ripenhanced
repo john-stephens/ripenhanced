@@ -5,6 +5,7 @@ OUTPUT=$2
 
 TOCFILE=/tmp/$$.toc
 LOGFILE=$2.ddrescue.log
+MOUNTOPTSFILE=$2.mntopts.txt
 SESSION=2
 SECTOR_SIZE=2048
 
@@ -26,10 +27,14 @@ fi
 # Extract the starting sector and convert to bytes
 
 #12 DATA 4 44:57:37(202312) 10:26:31( 46981)
-start=`echo "$rawtoc" | sed -E "s/^[^\(]+\(([0-9]+)\).*/\1*$SECTOR_SIZE/" | bc`
+sector_start=`echo "$rawtoc" | sed -E "s/^[^\(]+\(([0-9]+)\).*/\1/"`
+byte_start=`echo "$sector_start*$SECTOR_SIZE" | bc`
+
+# Write the mount options to a file
+echo "sbsector=$sector_start,block=$SECTOR_SIZE" > $MOUNTOPTSFILE
 
 # Extract the data
-ddrescue -r 1 -b $SECTOR_SIZE -i $start -o 0 "$DEVICE" "$OUTPUT" "$LOGFILE"
+ddrescue -r 1 -b $SECTOR_SIZE -i $byte_start -S "$DEVICE" "$OUTPUT" "$LOGFILE"
 
 # Remove the log if there are no errors
 numerrs=`cat "$LOGFILE" | grep -Ei "^(0x[0-9A-F]+\s+){2}-$" | wc -l`
