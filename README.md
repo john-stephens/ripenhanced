@@ -28,7 +28,7 @@ Retrieve the mount options:
 `cat {ISOFILE}.mntopts.txt`
 
 Mount the filesystem:
-`sudo mount -o loop,ro,{MNTOPTS} {ISOFILE} {MNTPOINT}`
+`sudo mount -o loop,ro,{MNTOPTS} -t iso9660 {ISOFILE} {MNTPOINT}`
 
 Now that the filesystem is mounted, you can `cd {MNTPOINT}` and then read the files you are interested in. Don't forget to `umount {MNTPOINT}` when you are done.
 
